@@ -46,4 +46,12 @@ extern NSString * const PPRSAErrorDomain;
  */
 - (NSData *)decryptData:(NSData *)encData error:(NSError **)error;
 
+
+#pragma mark Utilities
+
+/**
+ *  Utility function to create a random string of a given length. Contains alphanumeric letters as well as "@%#$^_.*-+/=".
+ */
++ (NSString *)randomStringOfLength:(NSUInteger)length;
+
 @end

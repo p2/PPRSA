@@ -208,6 +208,18 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 
 #pragma mark - Utilities
 
++ (NSString *)randomStringOfLength:(NSUInteger)length
+{
+	NSString *alphabet  = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789@%#$^_.*-+/=";
+	NSMutableString *s = [NSMutableString stringWithCapacity:length];
+	for (NSUInteger i = 0U; i < length; i++) {
+		u_int32_t r = arc4random() % [alphabet length];
+		unichar c = [alphabet characterAtIndex:r];
+		[s appendFormat:@"%C", c];
+	}
+	return [s copy];
+}
+
 - (NSString *)messageForP12ImportErrorCode:(OSStatus)code
 {
 	switch (code) {
