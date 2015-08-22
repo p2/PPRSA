@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
 
 extern NSString * const PPRSAErrorDomain;
 
@@ -21,12 +22,12 @@ extern NSString * const PPRSAErrorDomain;
 /**
  *  Loads the public key from a bundled X509 certificate.
  */
-- (BOOL)loadPublicKeyFromBundledCertificate:(NSString *)name error:(NSError **)error;
+- (BOOL)loadPublicKeyFromBundledCertificate:(NSString *)name error:(NSError ** __nullable)error;
 
 /**
  *  Encrypts given data with the public key.
  */
-- (NSData *)encryptData:(NSData *)plainData error:(NSError **)error;
+- (NSData * __nullable)encryptData:(NSData *)plainData error:(NSError ** __nullable)error;
 
 
 #pragma mark Decryption
@@ -34,17 +35,17 @@ extern NSString * const PPRSAErrorDomain;
 /**
  *  Loads the private key from given NSData. This is preferable over storing the actual .p12 file in the app bundle!
  */
-- (BOOL)loadPrivateKeyFromP12Data:(NSData *)certData password:(NSString *)password error:(NSError **)error;
+- (BOOL)loadPrivateKeyFromP12Data:(NSData *)certData password:(NSString *)password error:(NSError ** __nullable)error;
 
 /**
  *  Loads the private key with the given password. Can easily be extracted from your app, so use wisely!
  */
-- (BOOL)loadPrivateKeyFromBundledP12:(NSString *)name password:(NSString *)password error:(NSError **)error;
+- (BOOL)loadPrivateKeyFromBundledP12:(NSString *)name password:(NSString *)password error:(NSError ** __nullable)error;
 
 /**
  *  Decrypts given data with the private key.
  */
-- (NSData *)decryptData:(NSData *)encData error:(NSError **)error;
+- (NSData * __nullable)decryptData:(NSData *)encData error:(NSError ** __nullable)error;
 
 
 #pragma mark Utilities
@@ -55,3 +56,5 @@ extern NSString * const PPRSAErrorDomain;
 + (NSString *)randomStringOfLength:(NSUInteger)length;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -32,7 +32,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	if (url) {
 		NSData *certData = [NSData dataWithContentsOfURL:url];
 		if (certData) {
-			SecKeyRef public = [self loadPublicKey:certData error:error];
+			SecKeyRef public = [self publicKeyFromData:certData error:error];
 			if (public) {
 				if (publicKey) {
 					CFRelease(publicKey);
@@ -52,7 +52,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	return NO;
 }
 
-- (SecKeyRef)loadPublicKey:(NSData *)data error:(NSError **)error
+- (SecKeyRef)publicKeyFromData:(NSData *)data error:(NSError **)error
 {
 	SecCertificateRef certificate = SecCertificateCreateWithData(kCFAllocatorDefault, (__bridge CFDataRef)data);
 	if (certificate) {
@@ -63,7 +63,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 			return SecTrustCopyPublicKey(trust);
 		}
 		if (error) {
-			NSString *message = [NSString stringWithFormat:@"Failed to establish trust with certificate: %d", (int)status];
+			NSString *message = [self errorMessageForCode:status message:@"Failed to establish trust with certificate"];
 			*error = [NSError errorWithDomain:PPRSAErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: message}];
 		}
 	}
@@ -80,6 +80,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	if (url) {
 		NSData *certData = [NSData dataWithContentsOfURL:url];
 		if (certData) {
+			//NSLog(@"PRIVATE KEY DATA Base64:  %@", [certData base64EncodedStringWithOptions:0]);
 			return [self loadPrivateKeyFromP12Data:certData password:password error:error];
 		}
 		else if (error) {
@@ -96,9 +97,8 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 - (BOOL)loadPrivateKeyFromP12Data:(NSData *)certData password:(NSString *)password error:(NSError **)error
 {
 	NSParameterAssert(certData);
-	NSLog(@"PRIVATE Base62:  %@", [certData base64EncodedStringWithOptions:0]);
 	
-	SecKeyRef private = [self loadPrivateKey:certData withPassword:password error:error];
+	SecKeyRef private = [self privateKeyFromData:certData withPassword:password error:error];
 	if (private) {
 		if (privateKey) {
 			CFRelease(privateKey);
@@ -109,7 +109,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	return NO;
 }
 
-- (SecKeyRef)loadPrivateKey:(NSData *)keyData withPassword:(NSString *)password error:(NSError **)error
+- (SecKeyRef)privateKeyFromData:(NSData *)keyData withPassword:(NSString *)password error:(NSError **)error
 {
 	SecKeyRef privateKeyRef = NULL;
 	NSDictionary *options = @{(__bridge id)kSecImportExportPassphrase: password};
@@ -124,13 +124,13 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 		if (status != noErr) {
 			privateKeyRef = NULL;
 			if (error) {
-				NSString *message = [NSString stringWithFormat:@"Failed to copy private key data, error code: %d", (int)status];
+				NSString *message = [self errorMessageForCode:status message:@"Failed to copy private key"];
 				*error = [NSError errorWithDomain:PPRSAErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: message}];
 			}
 		}
 	}
 	else if (error) {
-		NSString *message = [self messageForP12ImportErrorCode:status];
+		NSString *message = [self errorMessageForCode:status message:@"Failed to import P12 data"];
 		*error = [NSError errorWithDomain:PPRSAErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: message}];
 	}
 	CFRelease(items);
@@ -171,7 +171,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 		return [buffer copy];
 	}
 	if (error) {
-		NSString *message = [NSString stringWithFormat:@"Failed to encrypt data, error code: %d", (int)status];
+		NSString *message = [self errorMessageForCode:status message:@"Failed to encrypt data"];
 		*error = [NSError errorWithDomain:PPRSAErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: message}];
 	}
 	return nil;
@@ -198,7 +198,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 		return [buffer copy];
 	}
 	if (error) {
-		NSString *message = [NSString stringWithFormat:@"Failed to decrypt data, error code: %d", (int)status];
+		NSString *message = [self errorMessageForCode:status message:@"Failed to decrypt data"];
 		*error = [NSError errorWithDomain:PPRSAErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: message}];
 	}
 	return nil;
@@ -220,14 +220,15 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	return [s copy];
 }
 
-- (NSString *)messageForP12ImportErrorCode:(OSStatus)code
-{
+- (NSString * __nonnull)errorMessageForCode:(OSStatus)code message:(NSString *)message {
+	NSString *explanation = nil;
 	switch (code) {
 		case errSecAuthFailed:
-			return @"Failed to import P12 data: wrong password";
-		default:
-			return [NSString stringWithFormat:@"Failed to import P12 data, error code: %d", (int)code];
+			explanation = @"wrong password";
+		case errSSLCrypto:
+			explanation = @"invalid encryption";
 	}
+	return [NSString stringWithFormat:@"%@: %@", message, explanation ?: [NSString stringWithFormat:@"Error code %d", (int)code]];
 }
 
 
