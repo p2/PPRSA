@@ -26,8 +26,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 
 #pragma mark - Key Loading
 
-- (BOOL)loadPublicKeyFromBundledCertificate:(NSString *)name error:(NSError **)error
-{
+- (BOOL)loadPublicKeyFromBundledCertificate:(NSString *)name error:(NSError **)error {
 	NSURL *url = [[NSBundle mainBundle] URLForResource:name withExtension:@"crt"];
 	if (url) {
 		NSData *certData = [NSData dataWithContentsOfURL:url];
@@ -52,8 +51,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	return NO;
 }
 
-- (SecKeyRef)publicKeyFromData:(NSData *)data error:(NSError **)error
-{
+- (SecKeyRef)publicKeyFromData:(NSData *)data error:(NSError **)error {
 	SecCertificateRef certificate = SecCertificateCreateWithData(kCFAllocatorDefault, (__bridge CFDataRef)data);
 	if (certificate) {
 		SecPolicyRef policy = SecPolicyCreateBasicX509();
@@ -74,8 +72,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 }
 
 
-- (BOOL)loadPrivateKeyFromBundledP12:(NSString *)name password:(NSString *)password error:(NSError **)error
-{
+- (BOOL)loadPrivateKeyFromBundledP12:(NSString *)name password:(NSString *)password error:(NSError **)error {
 	NSURL *url = [[NSBundle mainBundle] URLForResource:name withExtension:@"p12"];
 	if (url) {
 		NSData *certData = [NSData dataWithContentsOfURL:url];
@@ -94,8 +91,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	return NO;
 }
 
-- (BOOL)loadPrivateKeyFromP12Data:(NSData *)certData password:(NSString *)password error:(NSError **)error
-{
+- (BOOL)loadPrivateKeyFromP12Data:(NSData *)certData password:(NSString *)password error:(NSError **)error {
 	NSParameterAssert(certData);
 	
 	SecKeyRef private = [self privateKeyFromData:certData withPassword:password error:error];
@@ -109,8 +105,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	return NO;
 }
 
-- (SecKeyRef)privateKeyFromData:(NSData *)keyData withPassword:(NSString *)password error:(NSError **)error
-{
+- (SecKeyRef)privateKeyFromData:(NSData *)keyData withPassword:(NSString *)password error:(NSError **)error {
 	SecKeyRef privateKeyRef = NULL;
 	NSDictionary *options = @{(__bridge id)kSecImportExportPassphrase: password};
 	CFArrayRef items = CFArrayCreate(NULL, 0, 0, NULL);
@@ -141,8 +136,11 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 
 #pragma mark - Encryption
 
-- (NSData *)encryptData:(NSData *)plainData error:(NSError **)error
-{
+- (BOOL)hasPublicKey {
+	return NULL != publicKey;
+}
+
+- (NSData *)encryptData:(NSData *)plainData error:(NSError **)error {
 	if (NULL == publicKey) {
 		if (error) {
 			*error = [NSError errorWithDomain:PPRSAErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"No public key has been loaded, cannot encrypt"}];
@@ -177,8 +175,15 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	return nil;
 }
 
-- (NSData *)decryptData:(NSData *)encData error:(NSError **)error
-{
+
+
+#pragma mark - Decryption
+
+- (BOOL)hasPrivateKey {
+	return NULL != privateKey;
+}
+
+- (NSData *)decryptData:(NSData *)encData error:(NSError **)error {
 	if (NULL == privateKey) {
 		if (error) {
 			*error = [NSError errorWithDomain:PPRSAErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey: @"No private key has been loaded, cannot decrypt"}];
@@ -208,8 +213,7 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 
 #pragma mark - Utilities
 
-+ (NSString *)randomStringOfLength:(NSUInteger)length
-{
++ (NSString *)randomStringOfLength:(NSUInteger)length {
 	NSString *alphabet  = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789@%#$^_.*-+/=";
 	NSMutableString *s = [NSMutableString stringWithCapacity:length];
 	for (NSUInteger i = 0U; i < length; i++) {

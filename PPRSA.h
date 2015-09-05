@@ -20,6 +20,11 @@ extern NSString * const PPRSAErrorDomain;
 #pragma mark Encryption
 
 /**
+ *  Whether the instance has a publi key and is thus able to encrypt.
+ */
+- (BOOL)hasPublicKey;
+
+/**
  *  Loads the public key from a bundled X509 certificate.
  */
 - (BOOL)loadPublicKeyFromBundledCertificate:(NSString *)name error:(NSError ** __nullable)error;
@@ -31,6 +36,11 @@ extern NSString * const PPRSAErrorDomain;
 
 
 #pragma mark Decryption
+
+/**
+ *  Whether the instance has a private key and is thus able to decrypt.
+ */
+- (BOOL)hasPrivateKey;
 
 /**
  *  Loads the private key from given NSData. This is preferable over storing the actual .p12 file in the app bundle!
