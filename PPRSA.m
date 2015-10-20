@@ -57,8 +57,12 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 		SecPolicyRef policy = SecPolicyCreateBasicX509();
 		SecTrustRef trust;
 		OSStatus status = SecTrustCreateWithCertificates(certificate, policy, &trust);
+		CFRelease(certificate);
+		CFRelease(policy);
 		if (errSecSuccess == status) {
-			return SecTrustCopyPublicKey(trust);
+			SecKeyRef key = SecTrustCopyPublicKey(trust);
+			CFRelease(trust);
+			return key;
 		}
 		if (error) {
 			NSString *message = [self errorMessageForCode:status message:@"Failed to establish trust with certificate"];
@@ -229,8 +233,10 @@ const uint32_t PPRSA_PADDING = kSecPaddingPKCS1;
 	switch (code) {
 		case errSecAuthFailed:
 			explanation = @"wrong password";
+			break;
 		case errSSLCrypto:
 			explanation = @"invalid encryption";
+			break;
 	}
 	return [NSString stringWithFormat:@"%@: %@", message, explanation ?: [NSString stringWithFormat:@"Error code %d", (int)code]];
 }
